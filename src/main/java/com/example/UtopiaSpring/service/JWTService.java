@@ -25,23 +25,7 @@ public class JWTService {
 
     private static final String SECRET = "83d2af1d7f2953d30918ec4485cc9cfff722966e5a0ee19ad6a66c3be3425328";
 
-    private String secretKey;
-
     private long expiry = 466560000000L;
-
-    public JWTService() {
-        secretKey = generateSecretKey();
-    }
-
-    public String generateSecretKey() {
-        try {
-            KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
-            SecretKey secretKey = keyGen.generateKey();
-            return Base64.getEncoder().encodeToString(secretKey.getEncoded());
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error generating secret key", e);
-        }
-    }
 
     public String generateToken(String username) {
 
@@ -57,7 +41,7 @@ public class JWTService {
     }
 
     private Key getKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        byte[] keyBytes = Decoders.BASE64.decode(SECRET);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
@@ -76,7 +60,7 @@ public class JWTService {
                 .setSigningKey(getKey())
                 .build().parseClaimsJws(token).getBody();
     }
-
+ 
 
     public boolean validateToken(String token, UserDetails userDetails) {
         final String userName = extractUserName(token);

@@ -4,22 +4,20 @@ package com.example.UtopiaSpring.controller;
 import com.example.UtopiaSpring.model.User;
 import com.example.UtopiaSpring.service.JWTService;
 import com.example.UtopiaSpring.service.UserService;
-import com.mongodb.MongoException;
-import com.mongodb.WriteError;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
-@CrossOrigin
 @RestController
 public class UserController {
 
@@ -33,29 +31,31 @@ public class UserController {
     AuthenticationManager authenticationManager;
 
     @PostMapping("signup")
-    public String register(@RequestBody User user) {
+    public Map<String, String> register(@RequestBody User user) {
         User registeredUser = service.saveUser(user);
         User user1 = service.getUser(registeredUser.getUsername());
+        Map<String, String> res = new HashMap<>();
         try {
-            String jwt = jwtService.generateToken(user1.getUsername());
-            return jwt;
+            res.put("user", user.getUsername());
+            res.put("status", "success");
+            res.put("token", jwtService.generateToken(user.getUsername()));
+            return res;
         } catch (Exception e) {
-            e.printStackTrace();
-            return e.getMessage();
+            res.put("message", e.getMessage());
+            return res;
         }
     }
 
     @PostMapping("login")
-    public String login(@RequestBody User user) {
-
-        Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
-
-        if (authentication.isAuthenticated())
-            return jwtService.generateToken(user.getUsername());
-        else
-            return "Login Failed";
-
+    public Map<String, String> login(@RequestBody User user) {
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
+        Map<String, String> response = new HashMap<>();
+        if (authentication.isAuthenticated()) {
+            response.put("user", user.getUsername());
+            response.put("status", "success");
+            response.put("token", jwtService.generateToken(user.getUsername()));
+            System.out.println(response);
+        }
+        return response;
     }
-
 }
